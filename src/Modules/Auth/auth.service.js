@@ -2,12 +2,15 @@ import { create, findOne } from "../../DB/database.repository.js";
 import UserModel from "../../DB/Models/user.model.js";
 import { HashEnum } from "../../Utils/enums/security.enum.js";
 import {
-    BadRequestException,
+  BadRequestException,
   ConflictException,
   NotFoundException,
 } from "../../Utils/Response/error.response.js";
 import { successResponse } from "../../Utils/Response/success.response.js";
-import { compareHash, generateHash } from "../../Utils/Security/hash.security.js";
+import {
+  compareHash,
+  generateHash,
+} from "../../Utils/Security/hash.security.js";
 
 export const signUp = async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
@@ -41,10 +44,10 @@ export const login = async (req, res) => {
     plaintext: password,
     ciphertext: user.password,
     algo: HashEnum.Argon,
-  })
+  });
 
-  if(!isPasswordValid)
-    throw BadRequestException({message: "Invalid email or password."});
+  if (!isPasswordValid)
+    throw BadRequestException({ message: "Invalid email or password." });
 
   return successResponse({
     res,

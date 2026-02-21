@@ -28,7 +28,7 @@ export const findByID = async ({ model, id, select = "", options = {} }) => {
   return await doc.exec();
 };
 
-export const find = async ({ model, filter, select = "",  options = {} }) => {
+export const find = async ({ model, filter, select = "", options = {} }) => {
   const doc = model.find(filter).select(select || "");
   if (options?.populate) {
     doc.populate(options.populate);

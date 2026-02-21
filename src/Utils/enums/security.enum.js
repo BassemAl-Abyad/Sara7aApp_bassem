@@ -1,4 +1,4 @@
 export const HashEnum = {
-    Bcrypt: "bcrypt",
-    Argon: "argon",
-}
+  Bcrypt: "bcrypt",
+  Argon: "argon",
+};

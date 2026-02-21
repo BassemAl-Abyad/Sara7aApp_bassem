@@ -6,5 +6,4 @@ const router = Router();
 router.post("/signup", authService.signUp);
 router.post("/login", authService.login);
 
-
 export default router;
