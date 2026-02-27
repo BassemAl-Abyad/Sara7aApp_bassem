@@ -4,10 +4,13 @@ export const GenderEnum = {
 };
 
 export const RoleEnum = {
-  superAdmin: 0,
-  Admin: 1,
-  Manager: 2,
-  User: 3,
+  Admin: 0,
+  User: 1,
+};
+
+export const signatureEnum = {
+  Admin: 0,
+  User: 1,
 };
 
 export const ProviderEnum = {

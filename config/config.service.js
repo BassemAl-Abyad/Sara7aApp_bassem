@@ -11,3 +11,14 @@ export const PORT = process.env.PORT || 5000;
 export const DB_URI = process.env.DB_URI;
 export const SALT = parseInt(process.env.SALT);
 export const ENCRYPTION_SECRET = process.env.ENCRYPTION_SECRET_KEY;
+//User Tokens
+export const TOKEN_USER_ACCESS_KEY = process.env.TOKEN_ACCESS_USER_SECRET_KEY;
+export const REFRESH_USER_SECRET_KEY =
+  process.env.TOKEN_REFRESH_USER_SECRET_KEY;
+//Admin Tokens
+export const TOKEN_ADMIN_ACCESS_KEY = process.env.TOKEN_ACCESS_ADMIN_SECRET_KEY;
+export const REFRESH_ADMIN_SECRET_KEY =
+  process.env.TOKEN_REFRESH_ADMIN_SECRET_KEY;
+
+export const ACCESS_EXPIRES = Number(process.env.ACCESS_EXPIRES);
+export const REFRESH_EXPIRES = Number(process.env.REFRESH_EXPIRES);
