@@ -17,7 +17,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"firstName\": \"Bassem\",\r\n    \"lastName\": \"Yossry\",\r\n    \"email\": \"b.yossry@gmail.com\",\r\n    \"password\": \"Pass@123456\"\r\n}",
+              "raw": "{\r\n    \"firstName\": \"Bassem\",\r\n    \"lastName\": \"Yossry\",\r\n    \"email\": \"b.yossry@gmail.com\",\r\n    \"password\": \"Pass@123456\",\r\n    \"phone\": \"01001450022\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -25,11 +25,17 @@
               }
             },
             "url": {
-              "raw": "http://localhost:3000/auth/signup",
+              "raw": "http://localhost:3000/api/auth/signup",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "3000",
-              "path": ["auth", "signup"]
+              "path": [
+                "api",
+                "auth",
+                "signup"
+              ]
             }
           },
           "response": []
@@ -49,12 +55,31 @@
               }
             },
             "url": {
-              "raw": "http://localhost:3000/auth/login",
+              "raw": "http://localhost:3000/api/auth/login",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "3000",
-              "path": ["auth", "login"]
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
             }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "GetProfile",
+          "request": {
+            "method": "GET",
+            "header": []
           },
           "response": []
         }
