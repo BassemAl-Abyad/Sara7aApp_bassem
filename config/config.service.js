@@ -10,3 +10,4 @@ dotenv.config({ path: resolve(`./config/${envPath.development}`) });
 export const PORT = process.env.PORT || 5000;
 export const DB_URI = process.env.DB_URI;
 export const SALT = parseInt(process.env.SALT);
+export const ENCRYPTION_SECRET = process.env.ENCRYPTION_SECRET_KEY;

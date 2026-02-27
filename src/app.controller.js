@@ -16,8 +16,8 @@ const bootsrtrap = async (app, express) => {
       message: "Success!",
     });
   });
-  app.use("/auth", authRouter);
-  app.use("/user", userRouter);
+  app.use("/api/auth", authRouter);
+  app.use("/api/user", userRouter);
 
   app.all("/*dummy", (req, res) => {
     throw NotFoundException({ message: "Handler not found!" });

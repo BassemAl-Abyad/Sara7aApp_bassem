@@ -7,13 +7,14 @@ import {
   NotFoundException,
 } from "../../Utils/Response/error.response.js";
 import { successResponse } from "../../Utils/Response/success.response.js";
+import { encrypt } from "../../Utils/Security/encryption.security.js";
 import {
   compareHash,
   generateHash,
 } from "../../Utils/Security/hash.security.js";
 
 export const signUp = async (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
+  const { firstName, lastName, email, password, phone } = req.body;
 
   if (await findOne({ model: UserModel, filter: { email } }))
     throw ConflictException({ message: "User already exists." });
@@ -23,9 +24,11 @@ export const signUp = async (req, res) => {
     algo: HashEnum.Argon,
   });
 
+  const encryptedData = await encrypt(phone);
+
   const user = await create({
     model: UserModel,
-    data: { firstName, lastName, email, password: hashedPassword },
+    data: { firstName, lastName, email, password: hashedPassword, phone: encryptedData },
   });
   return successResponse({
     res,
