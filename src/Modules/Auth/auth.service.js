@@ -1,12 +1,10 @@
 import {
-  REFRESH_EXPIRES,
-  REFRESH_USER_SECRET_KEY,
-} from "../../../config/config.service.js";
-import { create, findByID, findOne } from "../../DB/database.repository.js";
+  create,
+  findOne,
+} from "../../DB/database.repository.js";
 import UserModel from "../../DB/Models/user.model.js";
 import { HashEnum } from "../../Utils/enums/security.enum.js";
 import {
-  BadRequestException,
   ConflictException,
   NotFoundException,
 } from "../../Utils/Response/error.response.js";
@@ -16,7 +14,7 @@ import {
   compareHash,
   generateHash,
 } from "../../Utils/Security/hash.security.js";
-import { generateToken, getNewLoginCredentials, verifyToken } from "../../Utils/Tokens/token.js";
+import { getNewLoginCredentials } from "../../Utils/Tokens/token.js";
 
 export const signUp = async (req, res) => {
   const { firstName, lastName, email, password, phone } = req.body;
@@ -74,25 +72,19 @@ export const login = async (req, res) => {
 };
 
 export const refreshToken = async (req, res) => {
-  const { authorization } = req.headers;
-  const decodedToken = verifyToken({
-    token: authorization,
-    secretKey: REFRESH_USER_SECRET_KEY,
-  });
+  // Refactored code using authentication
+  const user = req.user;
+  const decoded = req.decoded;
 
-  const user = await findByID({
-    model: UserModel,
-    id: decodedToken.id,
-  });
-
-  if (!user) throw NotFoundException({ message: "User not found." });
-
-  const accessToken = generateToken({ id: user._id, email: user.email });
+  const credentials = await getNewLoginCredentials(user);
 
   return successResponse({
     res,
     message: "Token refreshed successfully.",
-    data: { accessToken },
+    data: { 
+      accessToken: credentials.accessToken,
+      refreshToken: credentials.refreshToken 
+    },
     statusCode: 200,
   });
 };

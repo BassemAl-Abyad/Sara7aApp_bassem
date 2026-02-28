@@ -49,13 +49,13 @@ export const getNewLoginCredentials = async (user) => {
   
 
   const accessToken = generateToken(
-    {_id: user._id, email: user.email},
+    {id: user._id, email: user.email},
     signature.accessSignature,
     {expiresIn: ACCESS_EXPIRES},
   )
 
   const refreshToken = generateToken(
-    {_id: user._id, email: user.email},
+    {id: user._id, email: user.email},
     signature.refreshSignature,
     {expiresIn: REFRESH_EXPIRES},
   )
