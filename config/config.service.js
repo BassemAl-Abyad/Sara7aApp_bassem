@@ -22,3 +22,6 @@ export const REFRESH_ADMIN_SECRET_KEY =
 
 export const ACCESS_EXPIRES = Number(process.env.ACCESS_EXPIRES);
 export const REFRESH_EXPIRES = Number(process.env.REFRESH_EXPIRES);
+
+// Social Login
+export const CLIENT_ID = process.env.CLIENT_ID;

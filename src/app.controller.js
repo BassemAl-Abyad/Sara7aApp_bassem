@@ -5,9 +5,10 @@ import {
   NotFoundException,
 } from "./Utils/Response/error.response.js";
 import { successResponse } from "./Utils/Response/success.response.js";
+import cors from "cors";
 
 const bootsrtrap = async (app, express) => {
-  app.use(express.json());
+  app.use(express.json(), cors());
   await connectDB();
   app.get("/", (req, res) => {
     return successResponse({
