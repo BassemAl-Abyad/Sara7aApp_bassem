@@ -46,7 +46,7 @@ export const signUp = async (req, res) => {
     message: "User created successfully.",
     data: { user },
   });
-};
+}
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
@@ -125,8 +125,9 @@ export const loginWithGoogle = async (req, res) => {
         statusCode: 200,
       });
     } else {
-      throw ConflictException({ 
-        message: "Email already exists with different login method. Please use regular login." 
+      throw ConflictException({
+        message:
+          "Email already exists with different login method. Please use regular login.",
       });
     }
   }
