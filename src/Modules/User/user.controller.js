@@ -9,6 +9,11 @@ import {
   fileValidation,
   localFileUpload,
 } from "../../Utils/Multer/local.multer.js";
+import { validation } from "../../Middleware/validation.middleware.js";
+import {
+  coverImagesValidation,
+  updateProfilePicSchema,
+} from "./user.validation.js";
 
 const router = Router();
 
@@ -27,7 +32,7 @@ router.patch(
     customPath: "User",
     validation: [...fileValidation.images],
   }).single("attachments"),
-
+  validation(updateProfilePicSchema),
   userService.updateProfilePic,
 );
 
@@ -39,7 +44,7 @@ router.patch(
     customPath: "User",
     validation: [...fileValidation.images],
   }).array("attachments", 5),
-
+  validation(coverImagesValidation),
   userService.updateCoverPic,
 );
 
