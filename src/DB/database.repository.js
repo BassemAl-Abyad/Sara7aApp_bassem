@@ -78,7 +78,7 @@ export const findOneAndUpdate = async ({
     filter,
     { ...update, $inc: { __v: 1 } },
     {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
       ...options,
     },
@@ -91,10 +91,10 @@ export const findByIDAndUpdate = async ({
   update,
   options,
 }) => {
-  return await model.findByIDAndUpdate(
+  return await model.findByIdAndUpdate(
     id,
     { ...update, $inc: { __v: 1 } },
-    { new: true, runValidators: true, ...options },
+    { returnDocument: 'after', runValidators: true, ...options },
   );
 };
 

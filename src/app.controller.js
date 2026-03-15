@@ -17,10 +17,10 @@ const bootsrtrap = async (app, express) => {
       message: "Success!",
     });
   });
+  app.use("/uploads", express.static("./src/uploads"))
   app.use("/api/auth", authRouter);
   app.use("/api/user", userRouter);
-
-  app.all("/*dummy", (req, res) => {
+  app.use((req, res, next) => {
     throw NotFoundException({ message: "Handler not found!" });
   });
 

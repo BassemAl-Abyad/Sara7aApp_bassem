@@ -4,6 +4,7 @@ import * as authValidation from "./auth.validation.js";
 import { authentication } from "../../Middleware/auth.middleware.js";
 import { tokenTypeEnum } from "../../Utils/enums/user.enum.js";
 import { validation } from "../../Middleware/validation.middleware.js";
+import { localFileUpload } from "../../Utils/Multer/local.multer.js";
 
 const router = Router();
 

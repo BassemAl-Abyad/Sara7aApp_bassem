@@ -6,8 +6,6 @@ const ENCRYPTION_SECRET_KEY = ENCRYPTION_SECRET;
 
 export const encrypt = async (text) => {
   const iv = crypto.randomBytes(IV_LENGTH);
-  console.log({ iv });
-
   const cipher = crypto.createCipheriv(
     "aes-256-cbc",
     Buffer.from(ENCRYPTION_SECRET_KEY),

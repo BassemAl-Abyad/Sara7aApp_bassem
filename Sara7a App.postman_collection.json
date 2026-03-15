@@ -69,6 +69,36 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"b.yossry@gmail.com\",\r\n    \"password\": \"Pass@123456\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -80,6 +110,38 @@
           "request": {
             "method": "GET",
             "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "UpdateProfilePic",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "attachments",
+                  "type": "file",
+                  "uuid": "f702923d-f92f-4da0-b1c6-ca7bdcc22071",
+                  "src": "/E:/profilepicbusiness.jpeg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/user/file-upload",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "user",
+                "file-upload"
+              ]
+            }
           },
           "response": []
         }

@@ -44,9 +44,7 @@ export const getNewLoginCredentials = async (user) => {
   const signature = await getSignature({
     signatureLevel:
       user.role != RoleEnum.Admin ? signatureEnum.User : signatureEnum.Admin,
-  });
-  console.log(signature);
-  
+  });  
 
   const accessToken = generateToken(
     {id: user._id, email: user.email},

@@ -55,7 +55,6 @@ export const validation = (schema) => {
       const validationResults = schema[key].validate(req[key], {
         abortEarly: false,
       });
-      console.log(`Validation Results for ${key}: `, validationResults);
       if (validationResults.error) {
         validationError.push({ key, details: validationResults.error.details });
       }
