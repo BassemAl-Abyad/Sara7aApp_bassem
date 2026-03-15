@@ -50,6 +50,7 @@ const userSchema = new mongoose.Schema(
     },
     confirmEmail: Date,
     profilePic: String,
+    coverPic: [String],
   },
   {
     timestamps: true,

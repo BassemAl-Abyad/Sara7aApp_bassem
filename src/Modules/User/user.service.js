@@ -33,3 +33,19 @@ export const updateProfilePic = async (req, res) => {
   });
 };
 
+export const updateCoverPic = async (req, res) => {
+  const user = await findByIDAndUpdate({
+    model: UserModel,
+    id: req.user._id,
+    update: {
+      coverPic: req.files?.map((file) => file.finalPath),
+    },
+  });
+
+  return successResponse({
+    res,
+    message: "Done",
+    statusCode: 200,
+    data: {user},
+  });
+};
