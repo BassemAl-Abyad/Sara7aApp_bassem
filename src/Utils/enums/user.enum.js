@@ -22,3 +22,8 @@ export const ProviderEnum = {
   System: 0,
   Google: 1,
 };
+
+export const LogoutTypeEnum = {
+  logoutFromAll: "logoutFromAll",
+  logout: "logout",
+};

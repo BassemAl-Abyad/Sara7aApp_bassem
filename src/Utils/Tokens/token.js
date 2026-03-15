@@ -8,6 +8,7 @@ import {
   TOKEN_USER_ACCESS_KEY,
 } from "../../../config/config.service.js";
 import { RoleEnum, signatureEnum } from "../enums/user.enum.js";
+import { v4 as uuidv4 } from "uuid";
 
 export const generateToken = (
   payload,
@@ -44,18 +45,19 @@ export const getNewLoginCredentials = async (user) => {
   const signature = await getSignature({
     signatureLevel:
       user.role != RoleEnum.Admin ? signatureEnum.User : signatureEnum.Admin,
-  });  
+  });
+  const jwtid = uuidv4();  
 
   const accessToken = generateToken(
     {id: user._id, email: user.email},
     signature.accessSignature,
-    {expiresIn: ACCESS_EXPIRES},
+    {expiresIn: ACCESS_EXPIRES, jwtid},
   )
 
   const refreshToken = generateToken(
     {id: user._id, email: user.email},
     signature.refreshSignature,
-    {expiresIn: REFRESH_EXPIRES},
+    {expiresIn: REFRESH_EXPIRES, jwtid},
   )
   
   return {accessToken, refreshToken}

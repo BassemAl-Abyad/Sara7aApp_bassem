@@ -4,7 +4,6 @@ import * as authValidation from "./auth.validation.js";
 import { authentication } from "../../Middleware/auth.middleware.js";
 import { tokenTypeEnum } from "../../Utils/enums/user.enum.js";
 import { validation } from "../../Middleware/validation.middleware.js";
-import { localFileUpload } from "../../Utils/Multer/local.multer.js";
 
 const router = Router();
 
@@ -13,11 +12,21 @@ router.post(
   validation(authValidation.signupSchema),
   authService.signUp,
 );
-router.post("/login", validation(authValidation.loginSchema), authService.login);
+router.post(
+  "/login",
+  validation(authValidation.loginSchema),
+  authService.login,
+);
 router.post(
   "/refresh-token",
   authentication({ tokenType: tokenTypeEnum.Refresh }),
   authService.refreshToken,
 );
 router.post("/social-login", authService.loginWithGoogle);
+router.post(
+  "/logout",
+  authentication({ tokenType: tokenTypeEnum.Access }),
+  authService.logout,
+);
+
 export default router;

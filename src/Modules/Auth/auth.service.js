@@ -1,8 +1,9 @@
 import { CLIENT_ID } from "../../../config/config.service.js";
-import { create, findOne } from "../../DB/database.repository.js";
+import { create, findOne, updateOne } from "../../DB/database.repository.js";
+import TokenModel from "../../DB/Models/token.model.js";
 import UserModel from "../../DB/Models/user.model.js";
 import { HashEnum } from "../../Utils/enums/security.enum.js";
-import { ProviderEnum } from "../../Utils/enums/user.enum.js";
+import { LogoutTypeEnum, ProviderEnum } from "../../Utils/enums/user.enum.js";
 import {
   BadRequestException,
   ConflictException,
@@ -46,7 +47,7 @@ export const signUp = async (req, res) => {
     message: "User created successfully.",
     data: { user },
   });
-}
+};
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
@@ -61,6 +62,12 @@ export const login = async (req, res) => {
 
   if (!isPasswordValid)
     throw BadRequestException({ message: "Invalid email or password." });
+
+  await updateOne({
+    model: UserModel,
+    filter: { _id: user._id },
+    update: { changeCredentialsTime: null },
+  });
 
   const credentials = await getNewLoginCredentials(user);
 
@@ -150,5 +157,40 @@ export const loginWithGoogle = async (req, res) => {
     message: "Login successful.",
     data: { credentials },
     statusCode: 201,
+  });
+};
+
+export const logout = async (req, res) => {
+  const { flag } = req.body;
+  let status = 200;
+  switch (flag) {
+    case LogoutTypeEnum.logout:
+      // Store revoked token with its original expiration time for TTL cleanup
+      const tokenExpiration = new Date(req.decoded.exp * 1000);
+      await create({
+        model: TokenModel,
+        data: {
+          jti: req.decoded.jti,
+          userId: req.user._id,
+          expiresIn: tokenExpiration,
+        },
+      });
+      status = 201;
+      break;
+    case LogoutTypeEnum.logoutFromAll:
+      await updateOne({
+        model: UserModel,
+        filter: { _id: req.user._id },
+        update: {
+          changeCredentialsTime: Date.now(),
+        },
+      });
+      status = 200;
+      break;
+  }
+  return successResponse({
+    res,
+    message: "Logout successful.",
+    statusCode: status,
   });
 };
