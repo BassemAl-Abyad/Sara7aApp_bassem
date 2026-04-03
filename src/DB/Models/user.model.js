@@ -56,6 +56,10 @@ const userSchema = new mongoose.Schema(
     coverPic: [String],
     changeCredentialsTime: Date,
     forgetPasswordOTP: String,
+    freezedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    freezedAt: Date,
+    restoredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    restoredAt: Date,
   },
   {
     timestamps: true,

@@ -45,3 +45,9 @@ export const updatePasswordSchema = {
     confirmNewPassword: joi.ref("newPassword"),
   },)
 };
+
+export const freezeAccountSchema = {
+  params: joi.object({
+    userId: generalFields.id,
+  },)
+};

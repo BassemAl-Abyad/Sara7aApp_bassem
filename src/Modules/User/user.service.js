@@ -1,7 +1,17 @@
-import { findByID, findByIDAndUpdate, updateOne } from "../../DB/database.repository.js";
+import {
+  findByID,
+  findByIDAndUpdate,
+  findOneAndUpdate,
+  updateOne,
+} from "../../DB/database.repository.js";
 import UserModel from "../../DB/Models/user.model.js";
 import { HashEnum } from "../../Utils/enums/security.enum.js";
-import { BadRequestException } from "../../Utils/Response/error.response.js";
+import { RoleEnum } from "../../Utils/enums/user.enum.js";
+import {
+  BadRequestException,
+  ForbiddenException,
+  UnauthorizedException,
+} from "../../Utils/Response/error.response.js";
 import { successResponse } from "../../Utils/Response/success.response.js";
 import { decrypt } from "../../Utils/Security/encryption.security.js";
 import {
@@ -89,5 +99,61 @@ export const updatePassword = async (req, res) => {
     res,
     message: "Password updated successfully.",
     statusCode: 200,
+  });
+};
+
+export const freezeAccount = async (req, res) => {
+  const { userId } = req.params;
+  const targetUserId = userId || req.user._id;
+
+  // Check if user is trying to freeze someone else's account
+  if (userId && req.user.role !== RoleEnum.Admin)
+    throw ForbiddenException({
+      message: "Only admins can freeze other accounts.",
+    });
+
+  // Check if the target account exists and is already frozen
+  const targetUser = await findByID({
+    model: UserModel,
+    id: targetUserId,
+  });
+
+  if (!targetUser)
+    throw BadRequestException({
+      message: "User not found.",
+    });
+
+  if (targetUser.freezedAt)
+    throw BadRequestException({
+      message: "Account is already frozen.",
+    });
+
+  // Users cannot freeze their own accounts if they're not admins
+  if (!userId && req.user.role !== RoleEnum.Admin)
+    throw ForbiddenException({
+      message: "Only admins can freeze accounts.",
+    });
+
+  const updateUser = await findOneAndUpdate({
+    model: UserModel,
+    filter: {
+      _id: targetUserId,
+      freezedAt: { $exists: false },
+    },
+    update: {
+      freezedAt: Date.now(),
+      freezedBy: req.user._id,
+      $unset: {
+        restoredBy: true,
+        restoredAt: true,
+      },
+    },
+  });
+
+  return successResponse({
+    res,
+    message: "Account frozen successfully.",
+    statusCode: 200,
+    data: { updateUser },
   });
 };
