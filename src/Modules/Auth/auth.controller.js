@@ -12,6 +12,16 @@ router.post(
   validation(authValidation.signupSchema),
   authService.signUp,
 );
+router.patch(
+  "/confirm-email",
+  validation(authValidation.confirmEmailSchema),
+  authService.confirmEmail,
+);
+router.post(
+  "/resend-otp",
+  validation(authValidation.resendOTPSchema),
+  authService.resendOTP,
+);
 router.post(
   "/login",
   validation(authValidation.loginSchema),

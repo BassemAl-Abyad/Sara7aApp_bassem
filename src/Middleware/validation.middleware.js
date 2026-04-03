@@ -1,7 +1,11 @@
 import joi from "joi";
 import { BadRequestException } from "../Utils/Response/error.response.js";
 import { Types } from "mongoose";
-import { GenderEnum, ProviderEnum, RoleEnum } from "../Utils/enums/user.enum.js";
+import {
+  GenderEnum,
+  ProviderEnum,
+  RoleEnum,
+} from "../Utils/enums/user.enum.js";
 
 export const generalFields = {
   firstName: joi
@@ -55,6 +59,7 @@ export const generalFields = {
     path: joi.string(),
     finalPath: joi.string(),
   },
+  otp: joi.string().pattern(/^[0-9]{6}$/),
 };
 
 export const validation = (schema) => {

@@ -50,6 +50,8 @@ const userSchema = new mongoose.Schema(
     },
     confirmEmail: Date,
     confirmEmailOTP: String,
+    confirmEmailOTPExpires: Date,
+    confirmEmailOTPAttempts: { type: Number, default: 0 },
     profilePic: String,
     coverPic: [String],
     changeCredentialsTime: Date,

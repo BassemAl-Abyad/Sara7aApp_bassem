@@ -7,11 +7,10 @@ import {
   revokeTokenKey,
   globalRevokeKey,
 } from "../../DB/redis.service.js";
-import { emailSubject, sendEmail } from "../../Utils/Email/email.utils.js";
 import { HashEnum } from "../../Utils/enums/security.enum.js";
 import { LogoutTypeEnum, ProviderEnum } from "../../Utils/enums/user.enum.js";
 import { emailEvent } from "../../Utils/Events/email.events.js";
-import { generateOTP } from "../../Utils/generateOTP.js";
+import { generateOTPWithExpiration } from "../../Utils/generateOTP.js";
 import {
   BadRequestException,
   ConflictException,
@@ -39,7 +38,7 @@ export const signUp = async (req, res) => {
   });
 
   const encryptedData = await encrypt(phone);
-  const otp = generateOTP();
+  const { otp, expiresAt } = generateOTPWithExpiration();
 
   const hashedOTP = await generateHash({
     plaintext: otp,
@@ -55,6 +54,8 @@ export const signUp = async (req, res) => {
       password: hashedPassword,
       phone: encryptedData,
       confirmEmailOTP: hashedOTP,
+      confirmEmailOTPExpires: expiresAt,
+      confirmEmailOTPAttempts: 0,
     },
   });
 
@@ -66,6 +67,146 @@ export const signUp = async (req, res) => {
     statusCode: 201,
     message: "User created successfully.",
     data: { user },
+  });
+};
+
+export const resendOTP = async (req, res) => {
+  const { email } = req.body;
+
+  const user = await findOne({
+    model: UserModel,
+    filter: { email },
+  });
+
+  if (!user) throw NotFoundException({ message: "User not found." });
+
+  if (user.confirmEmail) {
+    throw BadRequestException({ message: "Email is already confirmed." });
+  }
+
+  // Check if OTP has expired or max attempts reached before allowing resend
+  const canResend =
+    !user.confirmEmailOTPExpires ||
+    new Date() > user.confirmEmailOTPExpires ||
+    user.confirmEmailOTPAttempts >= 3;
+
+  if (!canResend) {
+    const timeRemaining = Math.ceil(
+      (user.confirmEmailOTPExpires - new Date()) / (1000 * 60),
+    );
+    throw BadRequestException({
+      message: `Please wait ${timeRemaining} minutes before requesting a new OTP.`,
+    });
+  }
+
+  const { otp, expiresAt } = generateOTPWithExpiration();
+
+  const hashedOTP = await generateHash({
+    plaintext: otp,
+    algo: HashEnum.Argon,
+  });
+
+  await updateOne({
+    model: UserModel,
+    filter: { email },
+    update: {
+      confirmEmailOTP: hashedOTP,
+      confirmEmailOTPExpires: expiresAt,
+      confirmEmailOTPAttempts: 0,
+    },
+  });
+
+  // call event emitter to send email
+  emailEvent.emit("confirmEmail", { email, otp, firstName: user.firstName });
+
+  return successResponse({
+    res,
+    statusCode: 200,
+    message: "OTP has been resent successfully.",
+  });
+};
+
+export const confirmEmail = async (req, res) => {
+  const { email, otp } = req.body;
+  const user = await findOne({
+    model: UserModel,
+    filter: {
+      email,
+      confirmEmail: { $exists: false },
+      confirmEmailOTP: { $exists: true },
+    },
+  });
+  if (!user) throw NotFoundException({ message: "User not found." });
+
+  // Check if OTP has expired
+  if (user.confirmEmailOTPExpires && new Date() > user.confirmEmailOTPExpires) {
+    throw BadRequestException({
+      message: "OTP has expired. Please request a new one.",
+    });
+  }
+
+  // Check if maximum attempts reached
+  if (user.confirmEmailOTPAttempts >= 3) {
+    throw BadRequestException({
+      message: "Maximum OTP attempts reached. Please request a new one.",
+    });
+  }
+
+  const isOTPValid = await compareHash({
+    plaintext: otp,
+    ciphertext: user.confirmEmailOTP,
+    algo: HashEnum.Argon,
+  });
+
+  if (!isOTPValid) {
+    console.log("Before increment - User attempts:", user.confirmEmailOTPAttempts);
+    
+    // Check if this would be the 3rd attempt (current attempts = 2)
+    if (user.confirmEmailOTPAttempts >= 2) {
+      // This is the 3rd attempt, block and show max reached message
+      await updateOne({
+        model: UserModel,
+        filter: { email },
+        update: { confirmEmailOTPAttempts: 3 },
+      });
+      throw BadRequestException({
+        message: "Maximum OTP attempts reached. Please request a new one.",
+      });
+    }
+    
+    // Increment attempt counter for attempts 1 and 2
+    const newAttempts = (user.confirmEmailOTPAttempts || 0) + 1;
+    await updateOne({
+      model: UserModel,
+      filter: { email },
+      update: { confirmEmailOTPAttempts: newAttempts },
+    });
+
+    console.log("After increment - New attempts:", newAttempts);
+
+    const remainingAttempts = 3 - newAttempts;
+    throw BadRequestException({
+      message: `Invalid OTP. ${remainingAttempts} attempts remaining.`,
+    });
+  }
+
+  await updateOne({
+    model: UserModel,
+    filter: { email },
+    update: {
+      confirmEmail: Date.now(),
+      $unset: {
+        confirmEmailOTP: true,
+        confirmEmailOTPExpires: true,
+        confirmEmailOTPAttempts: true,
+      },
+    },
+  });
+
+  return successResponse({
+    res,
+    statusCode: 200,
+    message: "Email confirmed successfully.",
   });
 };
 

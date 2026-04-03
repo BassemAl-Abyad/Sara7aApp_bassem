@@ -1,4 +1,8 @@
-import { get as redisGet, revokeTokenKey, globalRevokeKey } from "../DB/redis.service.js";
+import {
+  get as redisGet,
+  revokeTokenKey,
+  globalRevokeKey,
+} from "../DB/redis.service.js";
 import { findByID, findOne } from "../DB/database.repository.js";
 import TokenModel from "../DB/Models/token.model.js";
 import UserModel from "../DB/Models/user.model.js";
@@ -51,8 +55,13 @@ export const decodedToken = async ({
   const globalRevokeTimestamp = await redisGet({
     key: globalRevokeKey({ userId: decoded.id }),
   });
-  if (globalRevokeTimestamp && decoded.iat * 1000 < parseInt(globalRevokeTimestamp))
-    throw UnauthorizedException({ message: "Token is revoked due to logout from all devices." });
+  if (
+    globalRevokeTimestamp &&
+    decoded.iat * 1000 < parseInt(globalRevokeTimestamp)
+  )
+    throw UnauthorizedException({
+      message: "Token is revoked due to logout from all devices.",
+    });
 
   const user = await findByID({ model: UserModel, id: decoded.id });
   if (!user) throw NotFoundException({ message: "Account not registered." });
