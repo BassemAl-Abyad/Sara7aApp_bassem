@@ -1,6 +1,7 @@
 import connectDB from "./DB/connections.js";
 import { connectRedis } from "./DB/redis.connection.js";
 import { authRouter, userRouter } from "./Modules/index.js";
+import { sendEmail } from "./Utils/Email/email.utils.js";
 import {
   globalErrorHandler,
   NotFoundException,
@@ -12,6 +13,9 @@ const bootsrtrap = async (app, express) => {
   app.use(express.json(), cors());
   await connectDB();
   await connectRedis();
+
+  // Send email to test nodemailer
+  // await sendEmail({ to: "h6f3cn@gmail.com", subject: "Test" });
   app.get("/", (req, res) => {
     return successResponse({
       res,

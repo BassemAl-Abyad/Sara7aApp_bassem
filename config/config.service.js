@@ -26,3 +26,8 @@ export const REFRESH_EXPIRES = Number(process.env.REFRESH_EXPIRES);
 
 // Social Login
 export const CLIENT_ID = process.env.CLIENT_ID;
+
+// Sending email
+export const USER_EMAIL = process.env.USER_EMAIL;
+export const USER_PASSWORD = process.env.USER_PASSWORD;
+
