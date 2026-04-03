@@ -37,3 +37,11 @@ export const coverImagesValidation = {
     })
     .required(),
 };
+
+export const updatePasswordSchema = {
+  body: joi.object({
+    oldPassword: generalFields.password.required(),
+    newPassword: generalFields.password.required(),
+    confirmNewPassword: joi.ref("newPassword"),
+  },)
+};

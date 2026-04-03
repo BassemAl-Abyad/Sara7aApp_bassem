@@ -10,10 +10,7 @@ import {
   localFileUpload,
 } from "../../Utils/Multer/local.multer.js";
 import { validation } from "../../Middleware/validation.middleware.js";
-import {
-  coverImagesValidation,
-  updateProfilePicSchema,
-} from "./user.validation.js";
+import * as userValidation from "./user.validation.js";
 
 const router = Router();
 
@@ -32,7 +29,7 @@ router.patch(
     customPath: "User",
     validation: [...fileValidation.images],
   }).single("attachments"),
-  validation(updateProfilePicSchema),
+  validation(userValidation.updateProfilePicSchema),
   userService.updateProfilePic,
 );
 
@@ -44,8 +41,16 @@ router.patch(
     customPath: "User",
     validation: [...fileValidation.images],
   }).array("attachments", 5),
-  validation(coverImagesValidation),
+  validation(userValidation.coverImagesValidation),
   userService.updateCoverPic,
+);
+
+router.patch(
+  "/update-password",
+  authentication({ tokenType: tokenTypeEnum.Access }),
+  authorization({ accessRoles: [RoleEnum.User, RoleEnum.Admin] }),
+  validation(userValidation.updatePasswordSchema),
+  userService.updatePassword,
 );
 
 export default router;
