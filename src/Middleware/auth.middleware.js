@@ -1,3 +1,4 @@
+import { get as redisGet, revokeTokenKey, globalRevokeKey } from "../DB/redis.service.js";
 import { findByID, findOne } from "../DB/database.repository.js";
 import TokenModel from "../DB/Models/token.model.js";
 import UserModel from "../DB/Models/user.model.js";
@@ -35,8 +36,23 @@ export const decodedToken = async ({
   });
 
   // Check if token is permanently revoked (blacklisted) ---> logout
-  if (await findOne({ model: TokenModel, filter: { jti: decoded.jti } }))
-    throw UnauthorizedException({ message: "Token is revoked." });
+  // if (await findOne({ model: TokenModel, filter: { jti: decoded.jti } }))
+  //   throw UnauthorizedException({ message: "Token is revoked." });
+
+  const isRevoked = await redisGet({
+    key: revokeTokenKey({
+      userId: decoded.id,
+      jti: decoded.jti,
+    }),
+  });
+  if (isRevoked) throw UnauthorizedException({ message: "Token is revoked." });
+
+  // Check if user has global revoke timestamp (logout from all devices)
+  const globalRevokeTimestamp = await redisGet({
+    key: globalRevokeKey({ userId: decoded.id }),
+  });
+  if (globalRevokeTimestamp && decoded.iat * 1000 < parseInt(globalRevokeTimestamp))
+    throw UnauthorizedException({ message: "Token is revoked due to logout from all devices." });
 
   const user = await findByID({ model: UserModel, id: decoded.id });
   if (!user) throw NotFoundException({ message: "Account not registered." });

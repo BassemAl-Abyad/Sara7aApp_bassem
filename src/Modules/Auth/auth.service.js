@@ -1,12 +1,18 @@
-import { CLIENT_ID } from "../../../config/config.service.js";
+import { ACCESS_EXPIRES, CLIENT_ID } from "../../../config/config.service.js";
 import { create, findOne, updateOne } from "../../DB/database.repository.js";
 import TokenModel from "../../DB/Models/token.model.js";
 import UserModel from "../../DB/Models/user.model.js";
+import {
+  set,
+  revokeTokenKey,
+  globalRevokeKey,
+} from "../../DB/redis.service.js";
 import { HashEnum } from "../../Utils/enums/security.enum.js";
 import { LogoutTypeEnum, ProviderEnum } from "../../Utils/enums/user.enum.js";
 import {
   BadRequestException,
   ConflictException,
+  errorResponse,
   NotFoundException,
 } from "../../Utils/Response/error.response.js";
 import { successResponse } from "../../Utils/Response/success.response.js";
@@ -160,6 +166,7 @@ export const loginWithGoogle = async (req, res) => {
   });
 };
 
+// logout with ttl of mongodb
 export const logout = async (req, res) => {
   const { flag } = req.body;
   let status = 200;
@@ -167,6 +174,20 @@ export const logout = async (req, res) => {
     case LogoutTypeEnum.logout:
       // Store revoked token with its original expiration time for TTL cleanup
       const tokenExpiration = new Date(req.decoded.exp * 1000);
+
+      // Check if token already exists to prevent duplicate key error
+      const existingToken = await findOne({
+        model: TokenModel,
+        filter: { jti: req.decoded.jti },
+      });
+
+      if (existingToken) {
+        return errorResponse({
+          res,
+          message: "Token is revoked.",
+        });
+      }
+
       await create({
         model: TokenModel,
         data: {
@@ -184,6 +205,36 @@ export const logout = async (req, res) => {
         update: {
           changeCredentialsTime: Date.now(),
         },
+      });
+      status = 200;
+      break;
+  }
+  return successResponse({
+    res,
+    message: "Logout successful.",
+    statusCode: status,
+  });
+};
+
+// logout with redis
+export const logoutWithRedis = async (req, res) => {
+  const { flag } = req.body;
+  let status = 200;
+  switch (flag) {
+    case LogoutTypeEnum.logout:
+      const tokenExpiration = new Date(req.decoded.exp * 1000);
+      await set({
+        key: revokeTokenKey({ userId: req.user._id, jti: req.decoded.jti }),
+        value: req.decoded.jti,
+        ttl: req.decoded.iat + ACCESS_EXPIRES,
+      });
+      status = 201;
+      break;
+    case LogoutTypeEnum.logoutFromAll:
+      await set({
+        key: globalRevokeKey({ userId: req.user._id }),
+        value: Date.now().toString(),
+        ttl: ACCESS_EXPIRES,
       });
       status = 200;
       break;

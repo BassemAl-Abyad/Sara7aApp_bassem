@@ -46,18 +46,19 @@ export const getNewLoginCredentials = async (user) => {
     signatureLevel:
       user.role != RoleEnum.Admin ? signatureEnum.User : signatureEnum.Admin,
   });
-  const jwtid = uuidv4();  
+  const accessJwtid = uuidv4();  
+  const refreshJwtid = uuidv4();
 
   const accessToken = generateToken(
     {id: user._id, email: user.email},
     signature.accessSignature,
-    {expiresIn: ACCESS_EXPIRES, jwtid},
+    {expiresIn: ACCESS_EXPIRES, jwtid: accessJwtid},
   )
 
   const refreshToken = generateToken(
     {id: user._id, email: user.email},
     signature.refreshSignature,
-    {expiresIn: REFRESH_EXPIRES, jwtid},
+    {expiresIn: REFRESH_EXPIRES, jwtid: refreshJwtid},
   )
   
   return {accessToken, refreshToken}
