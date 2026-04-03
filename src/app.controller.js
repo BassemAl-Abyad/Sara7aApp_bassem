@@ -1,5 +1,5 @@
 import connectDB from "./DB/connections.js";
-import { connectRedis } from "./DB/Models/redis.connection.js";
+import { connectRedis } from "./DB/redis.connection.js";
 import { authRouter, userRouter } from "./Modules/index.js";
 import {
   globalErrorHandler,
