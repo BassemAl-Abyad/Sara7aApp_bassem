@@ -1,4 +1,5 @@
 import connectDB from "./DB/connections.js";
+import { connectRedis } from "./DB/Models/redis.connection.js";
 import { authRouter, userRouter } from "./Modules/index.js";
 import {
   globalErrorHandler,
@@ -10,6 +11,7 @@ import cors from "cors";
 const bootsrtrap = async (app, express) => {
   app.use(express.json(), cors());
   await connectDB();
+  await connectRedis();
   app.get("/", (req, res) => {
     return successResponse({
       res,
