@@ -128,15 +128,24 @@ export const resendOTP = async (req, res) => {
 
 export const confirmEmail = async (req, res) => {
   const { email, otp } = req.body;
+  
+  // First check if user exists
   const user = await findOne({
     model: UserModel,
-    filter: {
-      email,
-      confirmEmail: { $exists: false },
-      confirmEmailOTP: { $exists: true },
-    },
+    filter: { email },
   });
+  
   if (!user) throw NotFoundException({ message: "User not found." });
+  
+  // Check if email is already confirmed
+  if (user.confirmEmail) {
+    throw BadRequestException({ message: "Email is already confirmed." });
+  }
+  
+  // Check if OTP exists
+  if (!user.confirmEmailOTP) {
+    throw BadRequestException({ message: "No OTP found. Please request a new one." });
+  }
 
   // Check if OTP has expired
   if (user.confirmEmailOTPExpires && new Date() > user.confirmEmailOTPExpires) {
