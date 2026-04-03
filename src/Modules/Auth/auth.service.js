@@ -230,6 +230,7 @@ export const logoutWithRedis = async (req, res) => {
       });
       status = 201;
       break;
+      // Task
     case LogoutTypeEnum.logoutFromAll:
       await set({
         key: globalRevokeKey({ userId: req.user._id }),
