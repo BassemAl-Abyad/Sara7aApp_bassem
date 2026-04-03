@@ -49,6 +49,7 @@ const userSchema = new mongoose.Schema(
       default: ProviderEnum.System,
     },
     confirmEmail: Date,
+    confirmEmailOTP: String,
     profilePic: String,
     coverPic: [String],
     changeCredentialsTime: Date,

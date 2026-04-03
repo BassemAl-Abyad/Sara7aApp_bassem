@@ -7,8 +7,11 @@ import {
   revokeTokenKey,
   globalRevokeKey,
 } from "../../DB/redis.service.js";
+import { emailSubject, sendEmail } from "../../Utils/Email/email.utils.js";
 import { HashEnum } from "../../Utils/enums/security.enum.js";
 import { LogoutTypeEnum, ProviderEnum } from "../../Utils/enums/user.enum.js";
+import { emailEvent } from "../../Utils/Events/email.events.js";
+import { generateOTP } from "../../Utils/generateOTP.js";
 import {
   BadRequestException,
   ConflictException,
@@ -36,6 +39,12 @@ export const signUp = async (req, res) => {
   });
 
   const encryptedData = await encrypt(phone);
+  const otp = generateOTP();
+
+  const hashedOTP = await generateHash({
+    plaintext: otp,
+    algo: HashEnum.Argon,
+  });
 
   const user = await create({
     model: UserModel,
@@ -45,8 +54,13 @@ export const signUp = async (req, res) => {
       email,
       password: hashedPassword,
       phone: encryptedData,
+      confirmEmailOTP: hashedOTP,
     },
   });
+
+  // call event emitter to send email
+  emailEvent.emit("confirmEmail", { email, otp, firstName });
+
   return successResponse({
     res,
     statusCode: 201,
@@ -230,7 +244,7 @@ export const logoutWithRedis = async (req, res) => {
       });
       status = 201;
       break;
-      // Task
+    // Task
     case LogoutTypeEnum.logoutFromAll:
       await set({
         key: globalRevokeKey({ userId: req.user._id }),
