@@ -8,8 +8,19 @@ emailEvent.on("confirmEmail", async (data) => {
   await sendEmail({
     to: data.email,
     subject: emailSubject.confirmEmail,
-    html: template(data.otp, data.firstName),
+    html: template(data.otp, data.firstName, emailSubject.confirmEmail),
   }).catch((err) => {
     console.error("Error sending confirmation email:", err);
+  });
+});
+
+
+emailEvent.on("forgetPassword", async (data) => {
+  await sendEmail({
+    to: data.to,
+    subject: emailSubject.resetPassword,
+    html: template(data.otp, data.firstName, emailSubject.resetPassword),
+  }).catch((err) => {
+    console.error("Error sending password reset email:", err);
   });
 });

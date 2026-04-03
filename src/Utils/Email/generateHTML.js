@@ -1,4 +1,4 @@
-export const template = (code, firstName) => `
+export const template = (code, firstName, subject) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -69,7 +69,7 @@ export const template = (code, firstName) => `
             
             <tr>
                 <td style="padding: 25px;">
-                    <h2 style="margin-top: 0; color: #333333; font-size: 19px; font-weight: bold;">Verify your email</h2>
+                    <h2 style="margin-top: 0; color: #333333; font-size: 19px; font-weight: bold;">${subject}</h2>
                     <p style="margin-top: 10px; line-height: 1.5;">Hi ${firstName},</p>
                     <p style="line-height: 1.5;">Thanks for signing up! Please use the following one-time password (OTP) to verify your email address. This code is valid for the next 5 minutes:</p>
                     

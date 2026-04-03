@@ -43,5 +43,15 @@ router.post(
   authentication({ tokenType: tokenTypeEnum.Access }),
   authService.logoutWithRedis,
 );
+router.patch(
+  "/forget-password",
+  validation(authValidation.forgetPasswordSchema),
+  authService.forgetPassword,
+);
+router.patch(
+  "/reset-password",
+  validation(authValidation.resetPasswordSchema),
+  authService.resetPassword,
+);
 
 export default router;

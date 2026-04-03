@@ -55,6 +55,7 @@ const userSchema = new mongoose.Schema(
     profilePic: String,
     coverPic: [String],
     changeCredentialsTime: Date,
+    forgetPasswordOTP: String,
   },
   {
     timestamps: true,

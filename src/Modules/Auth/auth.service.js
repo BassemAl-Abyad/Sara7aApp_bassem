@@ -1,5 +1,10 @@
 import { ACCESS_EXPIRES, CLIENT_ID } from "../../../config/config.service.js";
-import { create, findOne, updateOne } from "../../DB/database.repository.js";
+import {
+  create,
+  findOne,
+  findOneAndUpdate,
+  updateOne,
+} from "../../DB/database.repository.js";
 import TokenModel from "../../DB/Models/token.model.js";
 import UserModel from "../../DB/Models/user.model.js";
 import {
@@ -10,7 +15,10 @@ import {
 import { HashEnum } from "../../Utils/enums/security.enum.js";
 import { LogoutTypeEnum, ProviderEnum } from "../../Utils/enums/user.enum.js";
 import { emailEvent } from "../../Utils/Events/email.events.js";
-import { generateOTPWithExpiration } from "../../Utils/generateOTP.js";
+import {
+  generateOTP,
+  generateOTPWithExpiration,
+} from "../../Utils/generateOTP.js";
 import {
   BadRequestException,
   ConflictException,
@@ -128,23 +136,25 @@ export const resendOTP = async (req, res) => {
 
 export const confirmEmail = async (req, res) => {
   const { email, otp } = req.body;
-  
+
   // First check if user exists
   const user = await findOne({
     model: UserModel,
     filter: { email },
   });
-  
+
   if (!user) throw NotFoundException({ message: "User not found." });
-  
+
   // Check if email is already confirmed
   if (user.confirmEmail) {
     throw BadRequestException({ message: "Email is already confirmed." });
   }
-  
+
   // Check if OTP exists
   if (!user.confirmEmailOTP) {
-    throw BadRequestException({ message: "No OTP found. Please request a new one." });
+    throw BadRequestException({
+      message: "No OTP found. Please request a new one.",
+    });
   }
 
   // Check if OTP has expired
@@ -168,8 +178,11 @@ export const confirmEmail = async (req, res) => {
   });
 
   if (!isOTPValid) {
-    console.log("Before increment - User attempts:", user.confirmEmailOTPAttempts);
-    
+    console.log(
+      "Before increment - User attempts:",
+      user.confirmEmailOTPAttempts,
+    );
+
     // Check if this would be the 3rd attempt (current attempts = 2)
     if (user.confirmEmailOTPAttempts >= 2) {
       // This is the 3rd attempt, block and show max reached message
@@ -182,7 +195,7 @@ export const confirmEmail = async (req, res) => {
         message: "Maximum OTP attempts reached. Please request a new one.",
       });
     }
-    
+
     // Increment attempt counter for attempts 1 and 2
     const newAttempts = (user.confirmEmailOTPAttempts || 0) + 1;
     await updateOne({
@@ -408,5 +421,87 @@ export const logoutWithRedis = async (req, res) => {
     res,
     message: "Logout successful.",
     statusCode: status,
+  });
+};
+
+// forget password
+export const forgetPassword = async (req, res) => {
+  const { email } = req.body;
+
+  const otp = generateOTP();
+  const hashOTP = await generateHash({
+    plaintext: JSON.stringify(otp),
+    algo: HashEnum.Argon,
+  });
+
+  const user = await findOneAndUpdate({
+    model: UserModel,
+    filter: {
+      email,
+      provider: ProviderEnum.System,
+      confirmEmail: { $exists: true },
+    },
+    update: {
+      forgetPasswordOTP: hashOTP,
+    },
+  });
+
+  if (!user) throw NotFoundException({ message: "User not found." });
+
+  emailEvent.emit("forgetPassword", {
+    to: email,
+    otp,
+    firstName: user.firstName,
+  });
+
+  return successResponse({
+    res,
+    message: "OTP sent successfully.",
+    statusCode: 200,
+  });
+};
+
+// reset password
+export const resetPassword = async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+
+  const user = await findOne({
+    model: UserModel,
+    filter: {
+      email,
+      provider: ProviderEnum.System,
+      confirmEmail: { $exists: true },
+      forgetPasswordOTP: { $exists: true },
+    },
+  });
+
+  if (!user) throw NotFoundException({ message: "User not found." });
+
+  const isOTPValid = await compareHash({
+    plaintext: JSON.stringify(otp),
+    ciphertext: user.forgetPasswordOTP,
+    algo: HashEnum.Argon,
+  });
+
+  if (!isOTPValid) throw BadRequestException({ message: "Invalid OTP." });
+
+  const hashedPassword = await generateHash({
+    plaintext: newPassword,
+    algo: HashEnum.Argon,
+  });
+
+  await updateOne({
+    model: UserModel,
+    filter: { email },
+    update: {
+      password: hashedPassword,
+      $unset: { forgetPasswordOTP: true}
+    },
+  });
+
+  return successResponse({
+    res,
+    message: "Password reset successfully.",
+    statusCode: 200,
   });
 };

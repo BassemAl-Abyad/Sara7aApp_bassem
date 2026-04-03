@@ -1,5 +1,7 @@
 import joi from "joi";
 import { generalFields } from "../../Middleware/validation.middleware.js";
+import { generateOTP } from "../../Utils/generateOTP.js";
+import { generateHash } from "../../Utils/Security/hash.security.js";
 
 export const signupSchema = {
   body: joi.object({
@@ -24,6 +26,21 @@ export const confirmEmailSchema = {
   body: joi.object({
     email: generalFields.email.required(),
     otp: generalFields.otp.required(),
+  }),
+};
+
+export const forgetPasswordSchema = {
+  body: joi.object({
+    email: generalFields.email.required(),
+  }),
+};
+
+export const resetPasswordSchema = {
+  body: joi.object({
+    email: generalFields.email.required(),
+    otp: generalFields.otp.required(),
+    newPassword: generalFields.password.required(),
+    confirmNewPassword: joi.ref("newPassword"),
   }),
 };
 
