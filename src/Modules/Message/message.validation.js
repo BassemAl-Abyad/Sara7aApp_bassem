@@ -3,8 +3,8 @@ import joi from "joi";
 
 export const sendMessageSchema = {
   body: {
-    content: generalFields.password.min(2).max(500).required().messages({
-      "string.min": "Message must be at least 2 characters.",
+    content: generalFields.messageContent.required().messages({
+      "string.min": "Message must be at least 1 character.",
       "string.max": "Message must not exceed 500 characters.",
       "any.required": "Message content is required.",
     }),
