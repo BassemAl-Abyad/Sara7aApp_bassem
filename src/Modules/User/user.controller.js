@@ -88,4 +88,12 @@ router.post(
   userService.restoreAccountByEmail,
 );
 
+router.delete(
+  "/:userId/hard-delete-account",
+  authentication({ tokenType: tokenTypeEnum.Access }),
+  authorization({ accessRoles: [ RoleEnum.Admin] }),
+  validation(userValidation.hardDeleteAccountSchema),
+  userService.hardDeleteAccount,
+);
+
 export default router;

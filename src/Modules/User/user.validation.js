@@ -70,3 +70,9 @@ export const restoreAccountByEmailSchema = {
     otp: generalFields.otp.required(),
   },)
 };
+
+export const hardDeleteAccountSchema = {
+  params: joi.object({
+    userId: generalFields.id.required(),
+  },)
+};

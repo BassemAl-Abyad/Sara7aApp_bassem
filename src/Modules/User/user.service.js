@@ -3,6 +3,8 @@ import {
   findByIDAndUpdate,
   findOneAndUpdate,
   updateOne,
+  findOneAndDelete,
+  findOne,
 } from "../../DB/database.repository.js";
 import UserModel from "../../DB/Models/user.model.js";
 import { HashEnum } from "../../Utils/enums/security.enum.js";
@@ -384,5 +386,39 @@ export const restoreAccountByEmail = async (req, res) => {
     message: "Account restored successfully.",
     statusCode: 200,
     data: { updateUser },
+  });
+};
+
+export const hardDeleteAccount = async (req, res) => {
+  const { userId } = req.params;
+
+  // Check if the target account exists
+  const targetUser = await findByID({
+    model: UserModel,
+    id: userId,
+  });
+
+  if (!targetUser)
+    throw BadRequestException({
+      message: "User not found.",
+    });
+
+  // Prevent admins from deleting other admins (optional safety measure)
+  if (targetUser.role === RoleEnum.Admin && targetUser._id.toString() !== req.user._id.toString())
+    throw ForbiddenException({
+      message: "Cannot delete admin accounts.",
+    });
+
+  // Hard delete the user account
+  const deletedUser = await findOneAndDelete({
+    model: UserModel,
+    filter: { _id: userId },
+  });
+
+  return successResponse({
+    res,
+    message: "Account permanently deleted successfully.",
+    statusCode: 200,
+    data: { deletedUser },
   });
 };
