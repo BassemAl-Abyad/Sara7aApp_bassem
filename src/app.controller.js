@@ -7,13 +7,17 @@ import {
   NotFoundException,
 } from "./Utils/Response/error.response.js";
 import { successResponse } from "./Utils/Response/success.response.js";
+import logger from "./Utils/logger.utils.js";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import { CORS_ORIGIN, CORS_CREDENTIALS, CORS_METHODS, CORS_ALLOWED_HEADERS, NODE_ENV, MORGAN_FORMAT } from "../config/config.service.js";
+import { CORS_ORIGIN, CORS_CREDENTIALS, CORS_METHODS, CORS_ALLOWED_HEADERS, NODE_ENV, MORGAN_FORMAT, PORT } from "../config/config.service.js";
 
 const bootsrtrap = async (app, express) => {
+  logger.info('Initializing application bootstrap...');
+  
   // Security middleware
+  logger.middleware('Helmet Security Headers');
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
@@ -38,6 +42,7 @@ const bootsrtrap = async (app, express) => {
 
   // HTTP request logger
   if (NODE_ENV !== 'test') {
+    logger.middleware(`Morgan Logger (${MORGAN_FORMAT} format)`);
     app.use(morgan(MORGAN_FORMAT));
   }
 
@@ -49,13 +54,21 @@ const bootsrtrap = async (app, express) => {
     optionsSuccessStatus: 200
   };
 
+  logger.middleware('CORS', 'configured');
   app.use(cors(corsOptions));
+  
+  logger.middleware('Express JSON Parser');
   app.use(express.json());
+  
+  // Database connections
+  logger.info('Connecting to databases...');
   await connectDB();
   await connectRedis();
 
   // Send email to test nodemailer
   // await sendEmail({ to: "h6f3cn@gmail.com", subject: "Test" });
+  
+  logger.route('GET', '/');
   app.get("/", (req, res) => {
     return successResponse({
       res,
@@ -63,8 +76,14 @@ const bootsrtrap = async (app, express) => {
       message: "Success!",
     });
   });
+  
+  logger.middleware('Static Files', '/uploads');
   app.use("/uploads", express.static("./src/uploads"))
+  
+  logger.route('API', '/api/auth');
   app.use("/api/auth", authRouter);
+  
+  logger.route('API', '/api/user');
   app.use("/api/user", userRouter);
   app.use((req, res, next) => {
     throw NotFoundException({ message: "Handler not found!" });
