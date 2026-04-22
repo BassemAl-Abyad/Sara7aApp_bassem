@@ -66,6 +66,10 @@ export const decodedToken = async ({
   const user = await findByID({ model: UserModel, id: decoded.id });
   if (!user) throw NotFoundException({ message: "Account not registered." });
 
+  // Check if user account is frozen
+  if (user.freezedAt)
+    throw BadRequestException({ message: "Account is frozen. Please contact support." });
+
   if (user.changeCredentialsTime?.getTime() || 0 > decoded.iat * 1000)
     throw UnauthorizedException({ message: "Token is expired." });
 

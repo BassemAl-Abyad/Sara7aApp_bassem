@@ -237,6 +237,10 @@ export const login = async (req, res) => {
   const user = await findOne({ model: UserModel, filter: { email } });
   if (!user) throw NotFoundException({ message: "User not found." });
 
+  // Check if user account is frozen
+  if (user.freezedAt)
+    throw BadRequestException({ message: "Account is frozen. Please contact support." });
+
   const isPasswordValid = await compareHash({
     plaintext: password,
     ciphertext: user.password,
@@ -266,6 +270,10 @@ export const refreshToken = async (req, res) => {
   // Refactored code using authentication
   const user = req.user;
   const decoded = req.decoded;
+
+  // Check if user account is frozen
+  if (user.freezedAt)
+    throw BadRequestException({ message: "Account is frozen. Please contact support." });
 
   const credentials = await getNewLoginCredentials(user);
 
@@ -307,6 +315,10 @@ export const loginWithGoogle = async (req, res) => {
   if (user) {
     // User Login
     if (user.provider === ProviderEnum.Google) {
+      // Check if user account is frozen
+      if (user.freezedAt)
+        throw BadRequestException({ message: "Account is frozen. Please contact support." });
+        
       const credentials = await getNewLoginCredentials(user);
       return successResponse({
         res,
@@ -346,6 +358,11 @@ export const loginWithGoogle = async (req, res) => {
 // logout with ttl of mongodb
 export const logout = async (req, res) => {
   const { flag } = req.body;
+  
+  // Check if user account is frozen
+  if (req.user.freezedAt)
+    throw BadRequestException({ message: "Account is frozen. Please contact support." });
+    
   let status = 200;
   switch (flag) {
     case LogoutTypeEnum.logout:
@@ -396,6 +413,11 @@ export const logout = async (req, res) => {
 // logout with redis
 export const logoutWithRedis = async (req, res) => {
   const { flag } = req.body;
+  
+  // Check if user account is frozen
+  if (req.user.freezedAt)
+    throw BadRequestException({ message: "Account is frozen. Please contact support." });
+    
   let status = 200;
   switch (flag) {
     case LogoutTypeEnum.logout:
@@ -440,6 +462,7 @@ export const forgetPassword = async (req, res) => {
       email,
       provider: ProviderEnum.System,
       confirmEmail: { $exists: true },
+      freezedAt: { $exists: false },
     },
     update: {
       forgetPasswordOTP: hashOTP,
@@ -472,6 +495,7 @@ export const resetPassword = async (req, res) => {
       provider: ProviderEnum.System,
       confirmEmail: { $exists: true },
       forgetPasswordOTP: { $exists: true },
+      freezedAt: { $exists: false },
     },
   });
 
