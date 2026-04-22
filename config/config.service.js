@@ -41,3 +41,7 @@ export const CORS_ALLOWED_HEADERS = process.env.CORS_ALLOWED_HEADERS || "Content
 export const NODE_ENV = process.env.NODE_ENV || "development";
 export const MORGAN_FORMAT = process.env.MORGAN_FORMAT || "combined";
 
+// Rate Limiting Configuration
+export const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000; // 15 minutes
+export const RATE_LIMIT_MAX_REQUESTS = Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 100; // 100 requests per window
+

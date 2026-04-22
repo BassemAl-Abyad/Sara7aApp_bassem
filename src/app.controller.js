@@ -11,6 +11,7 @@ import logger from "./Utils/logger.utils.js";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import { apiRateLimiter } from "./Middleware/rateLimiter.middleware.js";
 import { CORS_ORIGIN, CORS_CREDENTIALS, CORS_METHODS, CORS_ALLOWED_HEADERS, NODE_ENV, MORGAN_FORMAT, PORT } from "../config/config.service.js";
 
 const bootsrtrap = async (app, express) => {
@@ -79,6 +80,10 @@ const bootsrtrap = async (app, express) => {
   
   logger.middleware('Static Files', '/uploads');
   app.use("/uploads", express.static("./src/uploads"))
+  
+  // Apply rate limiting to all API routes
+  logger.middleware('Rate Limiter', 'API endpoints');
+  app.use("/api", apiRateLimiter);
   
   logger.route('API', '/api/auth');
   app.use("/api/auth", authRouter);
