@@ -57,3 +57,16 @@ export const restoreAccountSchema = {
     userId: generalFields.id,
   },)
 };
+
+export const sendRestoreEmailSchema = {
+  body: joi.object({
+    email: generalFields.email.required(),
+  },)
+};
+
+export const restoreAccountByEmailSchema = {
+  body: joi.object({
+    email: generalFields.email.required(),
+    otp: generalFields.otp.required(),
+  },)
+};

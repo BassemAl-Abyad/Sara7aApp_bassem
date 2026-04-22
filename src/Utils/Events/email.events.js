@@ -24,3 +24,13 @@ emailEvent.on("forgetPassword", async (data) => {
     console.error("Error sending password reset email:", err);
   });
 });
+
+emailEvent.on("restoreAccount", async (data) => {
+  await sendEmail({
+    to: data.email,
+    subject: emailSubject.restoreAccount || "Account Restoration",
+    html: template(data.otp, data.firstName, "Account Restoration"),
+  }).catch((err) => {
+    console.error("Error sending account restoration email:", err);
+  });
+});

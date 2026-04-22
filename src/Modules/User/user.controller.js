@@ -76,4 +76,16 @@ router.delete(
   userService.restoreAccount,
 );
 
+router.post(
+  "/send-restore-email",
+  validation(userValidation.sendRestoreEmailSchema),
+  userService.sendRestoreAccountEmail,
+);
+
+router.post(
+  "/restore-by-email",
+  validation(userValidation.restoreAccountByEmailSchema),
+  userService.restoreAccountByEmail,
+);
+
 export default router;

@@ -18,6 +18,11 @@ import {
   compareHash,
   generateHash,
 } from "../../Utils/Security/hash.security.js";
+import {
+  generateOTP,
+  generateOTPWithExpiration,
+} from "../../Utils/generateOTP.js";
+import { emailEvent } from "../../Utils/Events/email.events.js";
 
 export const getProfile = async (req, res) => {
   if ((req, res)) {
@@ -208,6 +213,168 @@ export const restoreAccount = async (req, res) => {
       $unset: {
         freezedAt: true,
         freezedBy: true,
+      },
+    },
+  });
+
+  return successResponse({
+    res,
+    message: "Account restored successfully.",
+    statusCode: 200,
+    data: { updateUser },
+  });
+};
+
+export const sendRestoreAccountEmail = async (req, res) => {
+  const { email } = req.body;
+
+  // Find user by email
+  const user = await findOne({
+    model: UserModel,
+    filter: { email },
+  });
+
+  if (!user)
+    throw BadRequestException({
+      message: "User not found.",
+    });
+
+  if (!user.freezedAt)
+    throw BadRequestException({
+      message: "Account is not frozen.",
+    });
+
+  // Check if OTP has expired or max attempts reached before allowing resend
+  const canResend =
+    !user.restoreAccountOTPExpires ||
+    new Date() > user.restoreAccountOTPExpires ||
+    user.restoreAccountOTPAttempts >= 3;
+
+  if (!canResend) {
+    const timeRemaining = Math.ceil(
+      (user.restoreAccountOTPExpires - new Date()) / (1000 * 60),
+    );
+    throw BadRequestException({
+      message: `Please wait ${timeRemaining} minutes before requesting a new OTP.`,
+    });
+  }
+
+  const { otp, expiresAt } = generateOTPWithExpiration();
+
+  const hashedOTP = await generateHash({
+    plaintext: otp,
+    algo: HashEnum.Argon,
+  });
+
+  await updateOne({
+    model: UserModel,
+    filter: { email },
+    update: {
+      restoreAccountOTP: hashedOTP,
+      restoreAccountOTPExpires: expiresAt,
+      restoreAccountOTPAttempts: 0,
+    },
+  });
+
+  // call event emitter to send email
+  emailEvent.emit("restoreAccount", { email, otp, firstName: user.firstName });
+
+  return successResponse({
+    res,
+    statusCode: 200,
+    message: "Account restoration OTP has been sent to your email.",
+  });
+};
+
+export const restoreAccountByEmail = async (req, res) => {
+  const { email, otp } = req.body;
+
+  // First check if user exists
+  const user = await findOne({
+    model: UserModel,
+    filter: { email },
+  });
+
+  if (!user)
+    throw BadRequestException({
+      message: "User not found.",
+    });
+
+  if (!user.freezedAt)
+    throw BadRequestException({
+      message: "Account is not frozen.",
+    });
+
+  // Check if OTP exists
+  if (!user.restoreAccountOTP) {
+    throw BadRequestException({
+      message: "No OTP found. Please request a new one.",
+    });
+  }
+
+  // Check if OTP has expired
+  if (user.restoreAccountOTPExpires && new Date() > user.restoreAccountOTPExpires) {
+    throw BadRequestException({
+      message: "OTP has expired. Please request a new one.",
+    });
+  }
+
+  // Check if maximum attempts reached
+  if (user.restoreAccountOTPAttempts >= 3) {
+    throw BadRequestException({
+      message: "Maximum OTP attempts reached. Please request a new one.",
+    });
+  }
+
+  const isOTPValid = await compareHash({
+    plaintext: otp,
+    ciphertext: user.restoreAccountOTP,
+    algo: HashEnum.Argon,
+  });
+
+  if (!isOTPValid) {
+    // Check if this would be the 3rd attempt (current attempts = 2)
+    if (user.restoreAccountOTPAttempts >= 2) {
+      // This is the 3rd attempt, block and show max reached message
+      await updateOne({
+        model: UserModel,
+        filter: { email },
+        update: { restoreAccountOTPAttempts: 3 },
+      });
+      throw BadRequestException({
+        message: "Maximum OTP attempts reached. Please request a new one.",
+      });
+    }
+
+    // Increment attempt counter for attempts 1 and 2
+    const newAttempts = (user.restoreAccountOTPAttempts || 0) + 1;
+    await updateOne({
+      model: UserModel,
+      filter: { email },
+      update: { restoreAccountOTPAttempts: newAttempts },
+    });
+
+    throw BadRequestException({
+      message: "Invalid OTP. Please try again.",
+    });
+  }
+
+  // Restore the account
+  const updateUser = await findOneAndUpdate({
+    model: UserModel,
+    filter: {
+      _id: user._id,
+      freezedAt: { $exists: true },
+    },
+    update: {
+      restoredAt: Date.now(),
+      restoredBy: user._id, // User restored their own account
+      $unset: {
+        freezedAt: true,
+        freezedBy: true,
+        restoreAccountOTP: true,
+        restoreAccountOTPExpires: true,
+        restoreAccountOTPAttempts: true,
       },
     },
   });
