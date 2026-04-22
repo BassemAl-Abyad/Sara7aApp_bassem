@@ -157,3 +157,65 @@ export const freezeAccount = async (req, res) => {
     data: { updateUser },
   });
 };
+
+export const restoreAccount = async (req, res) => {
+  const { userId } = req.params;
+  const targetUserId = userId || req.user._id;
+
+  // Check if the target account exists and is frozen
+  const targetUser = await findByID({
+    model: UserModel,
+    id: targetUserId,
+  });
+
+  if (!targetUser)
+    throw BadRequestException({
+      message: "User not found.",
+    });
+
+  if (!targetUser.freezedAt)
+    throw BadRequestException({
+      message: "Account is not frozen.",
+    });
+
+  // Check if user is trying to restore someone else's account
+  if (userId && req.user.role !== RoleEnum.Admin)
+    throw ForbiddenException({
+      message: "Only admins can restore other accounts.",
+    });
+
+  // Users cannot restore their own accounts if they're not admins
+  if (!userId && req.user.role !== RoleEnum.Admin)
+    throw ForbiddenException({
+      message: "Only admins can restore accounts.",
+    });
+
+  // Check if the user trying to restore is the same user who froze the account
+  if (targetUser.freezedBy && targetUser.freezedBy.toString() === req.user._id.toString())
+    throw ForbiddenException({
+      message: "You cannot restore an account that you froze.",
+    });
+
+  const updateUser = await findOneAndUpdate({
+    model: UserModel,
+    filter: {
+      _id: targetUserId,
+      freezedAt: { $exists: true },
+    },
+    update: {
+      restoredAt: Date.now(),
+      restoredBy: req.user._id,
+      $unset: {
+        freezedAt: true,
+        freezedBy: true,
+      },
+    },
+  });
+
+  return successResponse({
+    res,
+    message: "Account restored successfully.",
+    statusCode: 200,
+    data: { updateUser },
+  });
+};

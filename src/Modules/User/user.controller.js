@@ -68,4 +68,12 @@ router.delete(
   userService.freezeAccount,
 );
 
+router.delete(
+  "/:userId/restore-account",
+  authentication({ tokenType: tokenTypeEnum.Access }),
+  authorization({ accessRoles: [ RoleEnum.Admin] }),
+  validation(userValidation.restoreAccountSchema),
+  userService.restoreAccount,
+);
+
 export default router;
