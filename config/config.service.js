@@ -37,3 +37,7 @@ export const CORS_CREDENTIALS = process.env.CORS_CREDENTIALS === "true";
 export const CORS_METHODS = process.env.CORS_METHODS || "GET,HEAD,PUT,PATCH,POST,DELETE";
 export const CORS_ALLOWED_HEADERS = process.env.CORS_ALLOWED_HEADERS || "Content-Type,Authorization";
 
+// Logger Configuration
+export const NODE_ENV = process.env.NODE_ENV || "development";
+export const MORGAN_FORMAT = process.env.MORGAN_FORMAT || "combined";
+

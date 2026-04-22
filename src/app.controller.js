@@ -9,7 +9,8 @@ import {
 import { successResponse } from "./Utils/Response/success.response.js";
 import cors from "cors";
 import helmet from "helmet";
-import { CORS_ORIGIN, CORS_CREDENTIALS, CORS_METHODS, CORS_ALLOWED_HEADERS } from "../config/config.service.js";
+import morgan from "morgan";
+import { CORS_ORIGIN, CORS_CREDENTIALS, CORS_METHODS, CORS_ALLOWED_HEADERS, NODE_ENV, MORGAN_FORMAT } from "../config/config.service.js";
 
 const bootsrtrap = async (app, express) => {
   // Security middleware
@@ -34,6 +35,11 @@ const bootsrtrap = async (app, express) => {
       preload: true
     }
   }));
+
+  // HTTP request logger
+  if (NODE_ENV !== 'test') {
+    app.use(morgan(MORGAN_FORMAT));
+  }
 
   const corsOptions = {
     origin: CORS_ORIGIN.split(',').map(origin => origin.trim()),
