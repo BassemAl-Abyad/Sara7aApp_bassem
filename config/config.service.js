@@ -31,3 +31,9 @@ export const CLIENT_ID = process.env.CLIENT_ID;
 export const USER_EMAIL = process.env.USER_EMAIL;
 export const USER_PASSWORD = process.env.USER_PASSWORD;
 
+// CORS Configuration
+export const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:3000";
+export const CORS_CREDENTIALS = process.env.CORS_CREDENTIALS === "true";
+export const CORS_METHODS = process.env.CORS_METHODS || "GET,HEAD,PUT,PATCH,POST,DELETE";
+export const CORS_ALLOWED_HEADERS = process.env.CORS_ALLOWED_HEADERS || "Content-Type,Authorization";
+
